@@ -24,10 +24,6 @@ public class StatementPrinter {
     public String statement() {
         int totalAmount = 0;
         int volumeCredits = 0;
-        final int tragedyAmount = 40000;
-        final int tragedyPerAudience = 1000;
-        final int tragedyAudienceThreshold = 30;
-        final int centPerDollar = 100;
 
         final StringBuilder result = new StringBuilder(
                 "Statement for " + invoice.getCustomer() + System.lineSeparator());
@@ -40,9 +36,10 @@ public class StatementPrinter {
             int thisAmount = 0;
             switch (play.getType()) {
                 case "tragedy":
-                    thisAmount = tragedyAmount;
-                    if (p.getAudience() > tragedyAudienceThreshold) {
-                        thisAmount += tragedyPerAudience * (p.getAudience() - tragedyAudienceThreshold);
+                    thisAmount = Constants.TRAGEDY_BASE_AMOUNT;
+                    if (p.getAudience() > Constants.TRAGEDY_AUDIENCE_THRESHOLD) {
+                        thisAmount += Constants.TRAGEDY_OVER_BASE_CAPACITY_PER_PERSON * (
+                                p.getAudience() - Constants.TRAGEDY_AUDIENCE_THRESHOLD);
                     }
                     break;
                 case "comedy":
@@ -63,15 +60,17 @@ public class StatementPrinter {
             // add extra credit for every five comedy attendees
             if ("comedy".equals(play.getType())) {
                 volumeCredits += p.getAudience() / Constants.COMEDY_EXTRA_VOLUME_FACTOR;
-
-                // print line for this order
-                result.append(String.format(
-                        "  %s: %s (%s seats)%n", play.getName(), frmt.format(
-                                thisAmount / centPerDollar), p.getAudience()));
-                totalAmount += thisAmount;
             }
+            // print line for this order
+            result.append(String.format(
+                    "  %s: %s (%s seats)%n",
+                    play.getName(),
+                    frmt.format(thisAmount / Constants.PERCENT_FACTOR),
+                    p.getAudience()));
+            totalAmount += thisAmount;
         }
-        result.append(String.format("Amount owed is %s%n", frmt.format(totalAmount / centPerDollar)));
+        result.append(String.format("Amount owed is %s%n",
+                frmt.format(totalAmount / Constants.PERCENT_FACTOR)));
         result.append(String.format("You earned %s credits%n", volumeCredits));
         return result.toString();
     }
