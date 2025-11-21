@@ -28,23 +28,24 @@ public class StatementPrinter {
         final StringBuilder result = new StringBuilder(
                 "Statement for " + invoice.getCustomer() + System.lineSeparator());
 
-        final NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(Locale.US);
-
         for (Performance performance : invoice.getPerformances()) {
             final int performanceAmount = getAmount(performance);
 
             totalAmount += performanceAmount;
             totalVolumeCredits += getVolumeCredits(performance);
 
-            result.append(formatPerformanceLine(performance, getPlay(performance),
-                    performanceAmount, currencyFormatter));
+            result.append(formatPerformanceLine(performance, getPlay(performance), performanceAmount));
         }
 
-        result.append(String.format("Amount owed is %s%n",
-                currencyFormatter.format(totalAmount / Constants.PERCENT_FACTOR)));
+        result.append(String.format("Amount owed is %s%n", usd(totalAmount)));
         result.append(String.format("You earned %s credits%n", totalVolumeCredits));
 
         return result.toString();
+    }
+
+    private String usd(int cents) {
+        return NumberFormat.getCurrencyInstance(Locale.US)
+                .format(cents / Constants.PERCENT_FACTOR);
     }
 
     private int getVolumeCredits(Performance performance) {
@@ -86,11 +87,10 @@ public class StatementPrinter {
         return performanceAmount;
     }
 
-    private String formatPerformanceLine(Performance performance, Play play, int amount,
-                                         NumberFormat currencyFormatter) {
+    private String formatPerformanceLine(Performance performance, Play play, int amount) {
         return String.format("  %s: %s (%s seats)%n",
                 play.getName(),
-                currencyFormatter.format(amount / Constants.PERCENT_FACTOR),
+                usd(amount),
                 performance.getAudience());
     }
 
