@@ -32,12 +32,12 @@ public class StatementPrinter {
 
         for (Performance performance : invoice.getPerformances()) {
             final int performanceAmount = getAmount(performance);
-            final int performanceCredits = calculateVolumeCredits(performance);
 
             totalAmount += performanceAmount;
-            totalVolumeCredits += performanceCredits;
+            totalVolumeCredits += getVolumeCredits(performance);
 
-            result.append(formatPerformanceLine(performance, getPlay(performance), performanceAmount, currencyFormatter));
+            result.append(formatPerformanceLine(performance, getPlay(performance),
+                    performanceAmount, currencyFormatter));
         }
 
         result.append(String.format("Amount owed is %s%n",
@@ -47,13 +47,22 @@ public class StatementPrinter {
         return result.toString();
     }
 
+    private int getVolumeCredits(Performance performance) {
+        int result = 0;
+        result += Math.max(performance.getAudience() - Constants.BASE_VOLUME_CREDIT_THRESHOLD, 0);
+        if ("comedy".equals(getPlay(performance).getType())) {
+            result += performance.getAudience() / Constants.COMEDY_EXTRA_VOLUME_FACTOR;
+        }
+        return result;
+    }
+
     private Play getPlay(Performance performance) {
         return plays.get(performance.getPlayID());
     }
 
     private int getAmount(Performance performance) {
         final Play play = getPlay(performance);
-        int performanceAmount = 0;
+        int performanceAmount;
         switch (play.getType()) {
             case "tragedy":
                 performanceAmount = Constants.TRAGEDY_BASE_AMOUNT;
@@ -77,16 +86,8 @@ public class StatementPrinter {
         return performanceAmount;
     }
 
-    private int calculateVolumeCredits(Performance performance) {
-        final Play play = getPlay(performance);
-        int credits = Math.max(performance.getAudience() - Constants.BASE_VOLUME_CREDIT_THRESHOLD, 0);
-        if ("comedy".equals(play.getType())) {
-            credits += performance.getAudience() / Constants.COMEDY_EXTRA_VOLUME_FACTOR;
-        }
-        return credits;
-    }
-
-    private String formatPerformanceLine(Performance performance, Play play, int amount, NumberFormat currencyFormatter) {
+    private String formatPerformanceLine(Performance performance, Play play, int amount,
+                                         NumberFormat currencyFormatter) {
         return String.format("  %s: %s (%s seats)%n",
                 play.getName(),
                 currencyFormatter.format(amount / Constants.PERCENT_FACTOR),
